@@ -1,7 +1,7 @@
-#include <stdint.h>
 #include <stdio.h>
 
 typedef unsigned char bool;
+typedef unsigned long long int uint64_t;
 
 //LSB
 typedef struct {
@@ -41,15 +41,18 @@ uint256_t fe_add(uint256_t a, uint256_t b){
 //[1010,1010,1010,1010] -> [0101,0101,0101,0100]
 uint256_t fe_half(uint256_t x){
 
-	bool carrys[3] = {x.digits[0] & 1, x.digits[1] & 1, x.digits[2] & 1};
+	uint64_t carrys[3] = {x.digits[1] & 1, x.digits[2] & 1, x.digits[3] & 1};
+
+	//[001,100,101,001] << 1 => [011,001,010,010]
 
 	x.digits[0] = x.digits[0] >> 1;
-	x.digits[0] &= carrys[0];
 	x.digits[1] = x.digits[1] >> 1;
-	x.digits[1] &= carrys[1];
 	x.digits[2] = x.digits[2] >> 1;
-	x.digits[2] &= carrys[2];
 	x.digits[3] = x.digits[3] >> 1;
+	
+	x.digits[0] |= carrys[0] << 63;
+	x.digits[1] |= carrys[1] << 63;
+	x.digits[2] |= carrys[2] << 63;
 
 	return x;
 }
@@ -70,7 +73,7 @@ uint256_t fe_square(uint256_t x){
 }
 
 //fast pow with implicit modulus
-uint256_t fe_pow(uint256_t b, uint32_t x){
+uint256_t fe_pow(uint256_t b, uint64_t x){
 	
 	//if <2; return
 	if(x < 2){
@@ -94,7 +97,12 @@ uint256_t fe_pow(uint256_t b, uint32_t x){
 
 //calculate y from x
 uint256_t curve(uint256_t x, bool odd, Curve_t curve){
-	return sqrt(add(pow(x,3), mul(a,x), b); //y = +-sqrt(x^3+ax+b)
+	if(odd){
+		return x;
+	}else{
+		return x;
+	}
+
 }
 
 int main(){
@@ -116,6 +124,12 @@ int main(){
 		secp256k1)}
 	};
 
+	//DEBUG
+	printf("Before: %064llb%064llb%064llb%064llb\n", g.x.digits[3], g.x.digits[2], g.x.digits[1], g.x.digits[0]);
+
+	g.x = fe_half(g.x);
+
+	printf("After: %064llb%064llb%064llb%064llb\n", g.x.digits[3], g.x.digits[2], g.x.digits[1], g.x.digits[0]);
 
 	return 0;
 }
