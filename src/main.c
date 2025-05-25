@@ -27,12 +27,11 @@ typedef struct{
 
 uint256_t fe_add(uint256_t a, uint256_t b){
 	
-	bool carry = 0;
+	uint64_t carry = 0;
 	uint256_t output = {0};
 	for(unsigned char i = 0; i < 4; i++){
 		output.digits[i] = a.digits[i]+b.digits[i]+carry;
 		carry = (a.digits[i] << 63) && (b.digits[i] << 63);
-		printf("%d",carry);
 	}
 
 	return output;
@@ -111,26 +110,19 @@ int main(){
 		{{0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFEFFFFFC2F}},
 		{{0,0,0,0}},
 		{{0,0,0,7}},
-		(uint256_t) {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xBAAEDCE6AF48A03B, 0xBFD25E8CD0364141}
+		{0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xBAAEDCE6AF48A03B, 0xBFD25E8CD0364141}
 	};
 	
 	Point_t g = {
 		1,
 		{
 			{0x79BE667EF9DCBBAC, 0x55A06295CE870B07, 0x029BFCDB2DCE28D9, 0x59F2815B16F81798},
-			curve( (uint256_t) {0x79BE667EF9DCBBAC, 0x55A06295CE870B07, 0x029BFCDB2DCE28D9, 0x59F2815B16F81798
-		},
-		0,
-		secp256k1)}
+			curve( (uint256_t) {0x79BE667EF9DCBBAC, 0x55A06295CE870B07, 0x029BFCDB2DCE28D9, 0x59F2815B16F81798}, 0, secp256k1)}
 	};
 
 	//DEBUG
-	printf("Before: %064llb%064llb%064llb%064llb\n", g.x.digits[3], g.x.digits[2], g.x.digits[1], g.x.digits[0]);
-
-	g.x = fe_half(g.x);
-
-	printf("After: %064llb%064llb%064llb%064llb\n", g.x.digits[3], g.x.digits[2], g.x.digits[1], g.x.digits[0]);
-
+	g.x = fe_add(g.x, g.x);
+	printf("%016llx%016llx%016llx%016llx\n", g.x.digits[0], g.x.digits[1], g.x.digits[2], g.x.digits[3]);
 	return 0;
 }
 
