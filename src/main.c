@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdio.h>
+
 typedef unsigned char bool;
 
 //LSB
@@ -7,9 +9,10 @@ typedef struct {
 } uint256_t;
 
 typedef struct{
-	uint64_t p;
-	uint64_t a;
-	uint64_t b;
+	uint256_t p;
+	uint256_t a;
+	uint256_t b;
+	uint256_t n;
 } Curve_t;
 
 typedef struct{
@@ -22,18 +25,31 @@ typedef struct{
 } Point_t;
 
 
-uint256_t fe_add(uint256_t ints, ...){
-	//TODO
-	return (uint256_t) {0,0,0,0};
+uint256_t fe_add(uint256_t a, uint256_t b){
+	
+	bool carry = 0;
+	uint256_t output = {0};
+	for(unsigned char i = 0; i < 4; i++){
+		output.digits[i] = a.digits[i]+b.digits[i]+carry;
+		carry = (a.digits[i] << 63) && (b.digits[i] << 63);
+		printf("%d",carry);
+	}
+
+	return output;
 }
 
 //[1010,1010,1010,1010] -> [0101,0101,0101,0100]
 uint256_t fe_half(uint256_t x){
 
-	bool carrys[3] = {x.digits[1] << 63, x.digits[2] << 63, x.digits[3] << 63};
+	bool carrys[3] = {x.digits[0] & 1, x.digits[1] & 1, x.digits[2] & 1};
 
-	x.digits[0] = x.digits[0] >> 1; //shift left
-	x.digits[0] &= carrys[0]; //set msb of limb
+	x.digits[0] = x.digits[0] >> 1;
+	x.digits[0] &= carrys[0];
+	x.digits[1] = x.digits[1] >> 1;
+	x.digits[1] &= carrys[1];
+	x.digits[2] = x.digits[2] >> 1;
+	x.digits[2] &= carrys[2];
+	x.digits[3] = x.digits[3] >> 1;
 
 	return x;
 }
@@ -83,8 +99,22 @@ uint256_t curve(uint256_t x, bool odd, Curve_t curve){
 
 int main(){
 
-	Curve_t ed25519 = {486662, 1};
-	Point_t g = {1, { , curve()}};
+	Curve_t secp256k1 = {
+		{{0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFEFFFFFC2F}},
+		{{0,0,0,0}},
+		{{0,0,0,7}},
+		(uint256_t) {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xBAAEDCE6AF48A03B, 0xBFD25E8CD0364141}
+	};
+	
+	Point_t g = {
+		1,
+		{
+			{0x79BE667EF9DCBBAC, 0x55A06295CE870B07, 0x029BFCDB2DCE28D9, 0x59F2815B16F81798},
+			curve( (uint256_t) {0x79BE667EF9DCBBAC, 0x55A06295CE870B07, 0x029BFCDB2DCE28D9, 0x59F2815B16F81798
+		},
+		0,
+		secp256k1)}
+	};
 
 
 	return 0;
